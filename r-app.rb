@@ -4,10 +4,9 @@ class RApp < Formula
 
   homepage 'http://cran.r-project.org/bin/macosx/'
   url 'http://cran.r-project.org/bin/macosx/Mac-GUI-1.62.tar.gz'
-  version '1.62'
   sha1 '3f7ef605076cf537b304a05d979ae44d3cb054ab'
 
-  head 'https://svn.r-project.org/R-packages/trunk/Mac-GUI', :using => :svn
+  head 'https://svn.r-project.org/R-packages/trunk/Mac-GUI'
 
   depends_on :xcode
   depends_on 'r'
@@ -36,7 +35,7 @@ class RApp < Formula
       cp_r cached_download/".svn", buildpath
     end
 
-    xcodebuild "-target", "R", "-configuration", "#{CONFIG}"
+    xcodebuild "-target", "R", "-configuration", "#{CONFIG}", "SYMROOT=build"
 
     prefix.install "build/#{CONFIG}/R.app"
   end
