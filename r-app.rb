@@ -7,7 +7,7 @@ class RApp < Formula
   version '1.62'
   sha1 '3f7ef605076cf537b304a05d979ae44d3cb054ab'
 
-  head 'svn://svn.r-project.org/R-packages/trunk'
+  head 'https://svn.r-project.org/R-packages/trunk/Mac-GUI', :using => :svn
 
   depends_on :xcode
   depends_on 'r'
@@ -31,8 +31,13 @@ class RApp < Formula
            "/Library/Frameworks/R.framework"
     end
 
-    system "xcodebuild -target R -configuration #{CONFIG}"
+    # ugly hack to get updateSVN script in build to not fail
+    if build.head?
+      cp_r cached_download/".svn", buildpath
+    end
 
-    prefix.install "build/#{CONFIG}/R.app", "/Applications/R.app"
+    xcodebuild "-target", "R", "-configuration", "#{CONFIG}"
+
+    prefix.install "build/#{CONFIG}/R.app"
   end
 end
