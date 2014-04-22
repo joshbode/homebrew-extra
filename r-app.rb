@@ -3,8 +3,8 @@ require 'formula'
 class RApp < Formula
 
   homepage 'http://cran.r-project.org/bin/macosx/'
-  url 'http://cran.r-project.org/bin/macosx/Mac-GUI-1.62.tar.gz'
-  sha1 '3f7ef605076cf537b304a05d979ae44d3cb054ab'
+  url 'http://cran.r-project.org/bin/macosx/Mac-GUI-1.64.tar.gz'
+  sha1 '8c31fb05ad990f0c83e94e1921738e0951624bd9'
 
   head 'https://svn.r-project.org/R-packages/trunk/Mac-GUI'
 
@@ -14,26 +14,36 @@ class RApp < Formula
 
   depends_on 'r'
 
-  if MacOS.version >= :mountain_lion
-    CONFIG = "MLion64"
-  elsif MacOS.version >= :lion
-    CONFIG = "Lion64"
-  elsif MacOS.version >= :snow_leopard
-    CONFIG = "SnowLeopard64"
+  def patches
+    # fix for 1.64 in GUI-tools.R
+    DATA if not build.head?
   end
 
   def install
     # ugly hack to get updateSVN script in build to not fail
-    if build.head?
-      cp_r cached_download/".svn", buildpath
-    end
+    cp_r cached_download/'.svn', buildpath if build.head?
 
-    xcodebuild "-target", "R",
-               "-configuration", "#{CONFIG}",
-               "SYMROOT=build",
-               "HEADER_SEARCH_PATHS=#{Formula['r'].opt_prefix}/R.framework/Headers",
-               "OTHER_LDFLAGS=-F#{Formula['r'].opt_prefix}"
+    r_opt_prefix = Formula['r'].opt_prefix
 
-    prefix.install "build/#{CONFIG}/R.app"
+    xcodebuild '-target', 'R', '-configuration', 'Release', 'SYMROOT=build',
+               "HEADER_SEARCH_PATHS=#{r_opt_prefix}/R.framework/Headers",
+               "OTHER_LDFLAGS=-F#{r_opt_prefix}"
+
+    prefix.install 'build/Release/R.app'
   end
 end
+
+__END__
+diff --git a/GUI-tools.R b/../GUI-tools.R.fix
+index a02b0b3..30383f4 100644
+--- a/GUI-tools.R
++++ b/../GUI-tools.R.fix
+@@ -99,7 +99,7 @@ add.fn("package.manager", function ()
+     pkgs.status <- character(length(is.loaded))
+     pkgs.status[which(is.loaded)] <- "loaded"
+     pkgs.status[which(!is.loaded)] <- " "
+-    pkgs.url <- file.path(.find.package(pkgs), "html", "00Index.html")
++    pkgs.url <- file.path(find.package(pkgs, quiet=TRUE), "html", "00Index.html")
+     load.idx <-
+         .Call("pkgmanager", is.loaded, pkgs, pkgs.desc, pkgs.url)
+     toload <- which(load.idx & !is.loaded)
